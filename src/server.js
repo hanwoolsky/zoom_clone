@@ -21,7 +21,7 @@ const sockets = [];
 
 wss.on("connection", (socket) => {
     sockets.push(socket); // 연결된 브라우저의 소켓을 저장
-    socket["nickname"] = "anonymouse";
+    socket["nickname"] = "anonymous";
     console.log("Connected to Browser✅");
     socket.on("close", () => console.log("Disconnected from server❗"));
     socket.on("message", msg => {
