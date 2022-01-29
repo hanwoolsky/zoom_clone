@@ -80,11 +80,6 @@ socket.on("room_change", (rooms) => {
     });
 });
 
-
-// div#welcome
-//     form
-//         input(placeholder="room name", required, type="text")
-//         button Enter Room
 //     h4 Open Rooms:
 //     ul
 // div#room

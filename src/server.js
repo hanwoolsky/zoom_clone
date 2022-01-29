@@ -46,9 +46,9 @@ function countRoom(roomName){
 
 io.on("connection", (socket) => {
     socket["nickname"] = "Anonymous";
-    socket.on("enter_room", (roomName, done) => {
+    socket.on("join_room", (roomName, done) => {
         socket.join(roomName);
-        done(); // front-end에서 실행시킴
+        done();
         socket.to(roomName).emit("welcome", socket.nickname, countRoom(roomName));
         io.sockets.emit("room_change", publicRooms());
     });
