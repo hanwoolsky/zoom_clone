@@ -1,6 +1,6 @@
 import http from "http";
-//import WebSocket from "ws";
-import SocketIO from "socket.io";
+import {Server} from "socket.io";
+import { instrument } from "@socket.io/admin-ui";
 import express from "express";
 
 const app = express();
@@ -13,8 +13,17 @@ app.get("/*", (req, res) => res.redirect("/"));
 
 const handleListen = () => console.log(`Listening on http://localhost:3000`);
 
-const server = http.createServer(app); // http server
-const io = SocketIO(server);
+const httpServer = http.createServer(app);
+const io = new Server(httpServer, {
+    cors: {
+        origin: ["https://admin.socket.io"],
+        credentials: true
+    }
+});
+
+instrument(io, {
+    auth: false
+});
 
 function publicRooms(){
     const {
@@ -31,12 +40,16 @@ function publicRooms(){
     return publicRooms;
 }
 
+function countRoom(roomName){
+    return io.sockets.adapter.rooms.get(roomName)?.size;
+}
+
 io.on("connection", (socket) => {
     socket["nickname"] = "Anonymous";
     socket.on("enter_room", (roomName, done) => {
         socket.join(roomName);
         done(); // front-end에서 실행시킴
-        socket.to(roomName).emit("welcome", socket.nickname);
+        socket.to(roomName).emit("welcome", socket.nickname, countRoom(roomName));
         io.sockets.emit("room_change", publicRooms());
     });
     socket.on("nickname", nickname => (socket["nickname"] = nickname));
@@ -45,11 +58,11 @@ io.on("connection", (socket) => {
         done();
     });
     socket.on("disconnecting", () => {
-        socket.rooms.forEach((room) => socket.to(room).emit("bye", socket.nickname));
+        socket.rooms.forEach((room) => socket.to(room).emit("bye", socket.nickname, countRoom(room) - 1));
     });
     socket.on("disconnect", () => {
         io.sockets.emit("room_change", publicRooms());
     });
 }); // receive connection
 
-server.listen(3000, handleListen);
+httpServer.listen(3000, handleListen);
