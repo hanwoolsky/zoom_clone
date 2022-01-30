@@ -46,9 +46,8 @@ function countRoom(roomName){
 
 io.on("connection", (socket) => {
     socket["nickname"] = "Anonymous";
-    socket.on("join_room", (roomName, done) => {
+    socket.on("join_room", (roomName) => {
         socket.join(roomName);
-        done();
         socket.to(roomName).emit("welcome", socket.nickname, countRoom(roomName));
         io.sockets.emit("room_change", publicRooms());
     });
@@ -57,6 +56,15 @@ io.on("connection", (socket) => {
         socket.to(room).emit("new_message", `${socket.nickname}: ${msg}`);
         done();
     });
+    socket.on("offer", (offer, roomName)=>{
+        socket.to(roomName).emit("offer", offer);
+    });
+    socket.on("answer", (answer, roomName) => {
+        socket.to(roomName).emit("answer", answer);
+    });
+    socket.on("ice", (ice, roomName) => {
+        socket.to(roomName).emit("ice", ice);
+    })
     socket.on("disconnecting", () => {
         socket.rooms.forEach((room) => socket.to(room).emit("bye", socket.nickname, countRoom(room) - 1));
     });
